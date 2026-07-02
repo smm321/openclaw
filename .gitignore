@@ -258,3 +258,6 @@ extensions/diffs-language-pack/assets/viewer-runtime.js
 /.opengrep-out/
 /.crabbox-artifacts
 .comux*
+
+# OpenClaw launch directory (contains local config, API keys, and build artifacts)
+lunch/
