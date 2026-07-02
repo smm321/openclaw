@@ -51,6 +51,7 @@ import {
   renderChatRunStatusIndicator,
   renderCompactionIndicator,
   renderFallbackIndicator,
+  renderTrafficLight,
 } from "../chat/status-indicators.ts";
 import { getExpandedToolCards, syncToolCardExpansionState } from "../chat/tool-expansion-state.ts";
 import type { EmbedSandboxMode } from "../embed-sandbox.ts";
@@ -2018,7 +2019,7 @@ export function renderChat(props: ChatProps) {
 
   return html`
     <section
-      class="card chat"
+      class="card chat ${isBusy || showAbortableUi ? "chat--busy" : ""}"
       @drop=${(e: DragEvent) => handleDrop(e, props)}
       @dragover=${(e: DragEvent) => e.preventDefault()}
     >
@@ -2122,6 +2123,7 @@ export function renderChat(props: ChatProps) {
       >
         ${renderSlashMenu(requestUpdate, props, visibleDraft)} ${renderAttachmentPreview(props)}
         <div class="agent-chat__composer-status-stack">
+          ${renderTrafficLight({ connected: props.connected, busy: isBusy })}
           ${renderFallbackIndicator(props.fallbackStatus)}
           ${renderCompactionIndicator(props.compactionStatus)}
           ${renderContextNotice(activeSession, props.sessions?.defaults?.contextTokens ?? null, {

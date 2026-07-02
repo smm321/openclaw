@@ -14,6 +14,28 @@ export type ComposerRunStatus =
       occurredAt?: number | null;
     };
 
+/**
+ * Renders a persistent traffic-light dot that indicates agent activity state.
+ * 🟢 green = idle/ready, 🟡 amber = busy/working, 🔴 red = disconnected.
+ */
+export function renderTrafficLight(params: {
+  connected: boolean;
+  busy: boolean;
+}) {
+  const { connected, busy } = params;
+  const status = !connected ? "disconnected" : busy ? "busy" : "idle";
+  const label = !connected ? "Disconnected" : busy ? "Working" : "Ready";
+  return html`
+    <span
+      class="agent-chat__traffic-light agent-chat__traffic-light--${status}"
+      role="status"
+      aria-live="polite"
+      aria-label=${`Agent status: ${label}`}
+      title=${`Agent status: ${label}`}
+    ></span>
+  `;
+}
+
 export function renderChatRunStatusIndicator(status: ComposerRunStatus | null | undefined) {
   if (!status) {
     return nothing;

@@ -1009,18 +1009,20 @@ export async function runTui(opts: RunTuiOptions): Promise<TuiResult> {
     if (activityStatus === "waiting") {
       waitingTick++;
       statusLoader.setMessage(
-        buildWaitingStatusMessage({
+        `${renderTrafficDot()} ${buildWaitingStatusMessage({
           theme,
           tick: waitingTick,
           elapsed,
           connectionStatus,
           phrases: waitingPhrase ? [waitingPhrase] : undefined,
-        }),
+        })}`,
       );
       return;
     }
 
-    statusLoader.setMessage(`${activityStatus} • ${elapsed} | ${connectionStatus}`);
+    statusLoader.setMessage(
+      `${renderTrafficDot()} ${activityStatus} • ${elapsed} | ${connectionStatus}`,
+    );
   };
 
   const startStatusTimer = () => {
@@ -1081,6 +1083,17 @@ export async function runTui(opts: RunTuiOptions): Promise<TuiResult> {
     waitingPhrase = null;
   };
 
+  // Traffic-light dot: green=idle, yellow=busy, red=disconnected/error.
+  const renderTrafficDot = () => {
+    if (!isConnected) {
+      return theme.error("●");
+    }
+    if (isTuiBusyActivityStatus(activityStatus)) {
+      return theme.accent("●");
+    }
+    return theme.success("●");
+  };
+
   const renderStatus = () => {
     const isBusy = isTuiBusyActivityStatus(activityStatus);
     if (isBusy) {
@@ -1104,7 +1117,7 @@ export async function runTui(opts: RunTuiOptions): Promise<TuiResult> {
       statusLoader = null;
       ensureStatusText();
       const text = activityStatus ? `${connectionStatus} | ${activityStatus}` : connectionStatus;
-      statusText?.setText(theme.dim(text));
+      statusText?.setText(`${renderTrafficDot()} ${theme.dim(text)}`);
     }
     lastActivityStatus = activityStatus;
   };
