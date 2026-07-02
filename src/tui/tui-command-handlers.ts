@@ -560,6 +560,28 @@ export function createCommandHandlers(context: CommandHandlerContext) {
           chatLog.addSystem(`fast failed: ${String(err)}`);
         }
         break;
+      case "label":
+        if (!args) {
+          const currentLabel = state.sessionInfo.label;
+          chatLog.addSystem(
+            currentLabel ? `session label: ${currentLabel}` : "no label set",
+          );
+          break;
+        }
+        try {
+          const result = await client.patchSession({
+            ...currentSessionPatchTarget(),
+            label: args === "-" ? null : args,
+          });
+          chatLog.addSystem(
+            args === "-" ? "label cleared" : `label set to "${args}"`,
+          );
+          applySessionInfoFromPatch(result);
+          await refreshSessionInfo();
+        } catch (err) {
+          chatLog.addSystem(`label failed: ${String(err)}`);
+        }
+        break;
       case "reasoning":
         if (!args) {
           chatLog.addSystem("usage: /reasoning <on|off>");

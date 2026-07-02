@@ -146,6 +146,10 @@ export function getSlashCommands(options: SlashCommandOptions = {}): SlashComman
       getArgumentCompletions: elevatedCompletions,
     },
     {
+      name: "label",
+      description: "Set or clear session label",
+    },
+    {
       name: "activation",
       description: "Set group activation",
       getArgumentCompletions: activationCompletions,
@@ -199,6 +203,7 @@ export function helpText(options: SlashCommandOptions = {}): string {
     "/usage <off|tokens|full>",
     "/elevated <on|off|ask|full>",
     "/elev <on|off|ask|full>",
+    "/label [name] (clear with /label -)",
     "/activation <mention|always>",
     "/new or /reset",
     "/abort",

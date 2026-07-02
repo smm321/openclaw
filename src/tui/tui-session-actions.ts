@@ -90,6 +90,7 @@ function sessionInfoUiEquals(left: SessionInfo, right: SessionInfo): boolean {
     left.totalTokens === right.totalTokens &&
     left.responseUsage === right.responseUsage &&
     left.displayName === right.displayName &&
+    left.label === right.label &&
     goalEquals(left.goal, right.goal)
   );
 }
@@ -271,6 +272,9 @@ export function createSessionActions(context: SessionActionContext) {
     if (entry?.contextTokens !== undefined || defaults?.contextTokens !== undefined) {
       next.contextTokens =
         entry?.contextTokens ?? defaults?.contextTokens ?? state.sessionInfo.contextTokens;
+    }
+    if (entry?.label !== undefined) {
+      next.label = entry.label;
     }
     if (entry?.displayName !== undefined) {
       next.displayName = entry.displayName;

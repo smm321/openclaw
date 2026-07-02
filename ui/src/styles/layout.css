@@ -833,6 +833,25 @@
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--ok) 12%, transparent);
 }
 
+.sidebar-recent-session__rename-input {
+  width: 100%;
+  min-width: 0;
+  padding: 2px 5px;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 650;
+  font-family: inherit;
+  outline: none;
+}
+
+.sidebar-recent-session__rename-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
 .sidebar-nav::-webkit-scrollbar {
   display: none;
 }

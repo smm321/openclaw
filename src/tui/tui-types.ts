@@ -71,6 +71,7 @@ export type SessionInfo = {
   goal?: SessionGoal;
   responseUsage?: ResponseUsageMode;
   updatedAt?: number | null;
+  label?: string;
   displayName?: string;
 };
 

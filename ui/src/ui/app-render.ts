@@ -169,6 +169,72 @@ import {
 } from "./navigation.ts";
 import { isPluginEnabledInConfigSnapshot } from "./plugin-activation.ts";
 import { isCronSessionKey, resolveSessionDisplayName } from "./session-display.ts";
+
+// ── Inline session label editing ──
+
+type RenameState = {
+  sessionKey: string;
+  value: string;
+  originalLabel: string;
+} | null;
+
+let renameState: RenameState = null;
+
+function requestHostUpdateForRename(state: AppViewState) {
+  const s = state as AppViewState & { requestUpdate?: () => void };
+  s.requestUpdate?.();
+}
+
+function commitRename(state: AppViewState) {
+  if (!renameState) return;
+  const newLabel = renameState.value.trim();
+  const cleared = renameState.value === "";
+  const changed =
+    (cleared ? null : newLabel) !== (renameState.originalLabel || null);
+  if (changed) {
+    patchSession(state, renameState.sessionKey, {
+      label: cleared ? null : newLabel,
+    });
+  }
+  renameState = null;
+  requestHostUpdateForRename(state);
+}
+
+function cancelRename(state: AppViewState) {
+  renameState = null;
+  requestHostUpdateForRename(state);
+}
+
+function startRename(state: AppViewState, sessionKey: string, currentLabel: string) {
+  renameState = { sessionKey, value: currentLabel, originalLabel: currentLabel };
+  requestHostUpdateForRename(state);
+  // Focus the input after Lit re-renders (microtask) + browser paints (animation frame)
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      const input = document.querySelector<HTMLInputElement>(
+        ".sidebar-recent-session__rename-input",
+      );
+      input?.focus();
+      input?.select();
+    });
+  });
+}
+
+function onRenameInput(e: Event) {
+  const input = e.target as HTMLInputElement;
+  if (!renameState) return;
+  renameState = { ...renameState, value: input.value };
+}
+
+function onRenameKeydown(e: KeyboardEvent, state: AppViewState) {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    commitRename(state);
+  } else if (e.key === "Escape") {
+    e.preventDefault();
+    cancelRename(state);
+  }
+}
 import "./components/dashboard-header.ts";
 import {
   buildAgentMainSessionKey,
@@ -619,13 +685,16 @@ function renderSidebarRecentSession(state: AppViewState, row: GatewaySessionRow)
   const label = resolveSessionDisplayName(row.key, row);
   const meta = row.updatedAt ? formatRelativeTimestamp(row.updatedAt) : "n/a";
   const href = `${pathForTab("chat", state.basePath)}?session=${encodeURIComponent(row.key)}`;
+  const editing = renameState?.sessionKey === row.key;
+
   return html`
     <a
       href=${href}
       class="sidebar-recent-session ${active ? "sidebar-recent-session--active" : ""}"
       data-session-key=${row.key}
-      title=${`${label} · ${row.key}`}
+      title=${editing ? "" : `${label} · ${row.key}`}
       @click=${(event: MouseEvent) => {
+        if (editing) return;
         if (
           event.defaultPrevented ||
           event.button !== 0 ||
@@ -645,7 +714,31 @@ function renderSidebarRecentSession(state: AppViewState, row: GatewaySessionRow)
     >
       <span class="sidebar-recent-session__dot" aria-hidden="true"></span>
       <span class="sidebar-recent-session__body">
-        <span class="sidebar-recent-session__name">${label}</span>
+        ${editing
+          ? html`
+              <input
+                class="sidebar-recent-session__rename-input"
+                type="text"
+                .value=${renameState?.value ?? label}
+                maxlength="512"
+                @input=${(e: Event) => onRenameInput(e)}
+                @keydown=${(e: KeyboardEvent) => onRenameKeydown(e, state)}
+                @blur=${() => commitRename(state)}
+                @click=${(e: Event) => e.stopPropagation()}
+              />
+            `
+          : html`
+              <span
+                class="sidebar-recent-session__name"
+                @dblclick=${(e: Event) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  startRename(state, row.key, label);
+                }}
+                title="Double-click to rename"
+                >${label}</span
+              >
+            `}
         <span class="sidebar-recent-session__meta">${meta}</span>
       </span>
       ${row.hasActiveRun
